@@ -4,6 +4,7 @@ In this file, you will implement generic search algorithms which are called by P
 
 from pacai.util.stack import *
 from pacai.util.queue import *
+from pacai.util.priorityQueue import *
 from pacai.core.actions import *
 
 """
@@ -125,6 +126,45 @@ def uniformCostSearch(problem):
     """
 
     # *** Your Code Here ***
+
+    def tracePath(explored, parents):
+        path = []
+        node = (explored[-1], parents[-1])
+        path.append(node[0])
+        for i in range(len(explored)-1, -1, -1):
+            if explored[i] == node[1]:
+                node = (explored[i], parents[i])
+                path.append(node[0])
+            if node[1] is None:
+                return path
+
+
+    node = problem.startingState()
+    if problem.isGoal(node):
+        return []  # empty list cus it's already complete?
+    frontier = PriorityQueue() 
+    frontier.push((node, None), 0)  # current node, parent (None)
+    explored = []
+    path = []
+    parents = []  # parents[i] is the parent of frontier[i]
+
+    while True:
+        if frontier.isEmpty():
+            return  # failure... don't return anything
+        node = frontier.pop()
+        explored.append(node[0])
+        parents.append(node[1])
+        for successor_state in problem.successorStates(node[0]):
+            coord, direction, cost = successor_state
+            if coord not in explored: 
+                if problem.isGoal(coord):
+                    explored.append(coord)
+                    parents.append(node[0])
+                    path = tracePath(explored, parents)
+                    directions = [Actions.vectorToDirection((path[i-1][0]-path[i][0], path[i-1][1]-path[i][1])) for i in range(len(path)-1, 0, -1)]
+                    
+                    return directions
+                frontier.push((coord, node[0]), cost)
     raise NotImplementedError()
 
 def aStarSearch(problem, heuristic):
