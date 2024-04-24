@@ -8,11 +8,6 @@ from pacai.util.priorityQueue import *
 from pacai.core.actions import *
 
 """
-rn: i need to make my ucm and a star more generic / work better
-
-- ucm fails autograder (tuple - tuple ... which might happen if the cost is somehow messing with how nodes are stored. so instead of (node, parent) it's something like ((node, parent), cost). but i'm not sure why that would happen for ucm since the cost is just a number, so it should just be used by the priority queue and it isn't actually part oft he node??
-- a star "passes" autograder, but it prob has same issue as ucm 
-- a star (with oriignal tracePath) passes test for q6 (hueristic), even though it doesn't actually reach all corners
     - goes to one corner, then stops since it thinks its reached its goal
     - isGoal for CornerProblem checks if pacman has visited all four corners in isGoal. so what happens is it has explored all four corners, but the path only contains teh nodes from the start to the last corner.
     - not sure how to fix this (its same issue for q5)
@@ -83,53 +78,23 @@ def breadthFirstSearch(problem):
     """
 
     # *** Your Code Here ***
+    frontier = Queue()
+    visited = []
+    frontier.push((problem.startingState(), []))
 
-    def tracePath(explored, parents):
-        path = []
-        node = (explored[-1], parents[-1])
-        path.append(node[0])
-        for i in range(len(explored)-1, -1, -1):
-            if explored[i] == node[1]:
-                node = (explored[i], parents[i])
-                path.append(node[0])
-            if node[1] is None:
-                return path
+    while not frontier.isEmpty():
+        pos, path = frontier.pop()
+        if pos not in visited:  # might not need this
+            visited.append(pos)
 
+        if problem.isGoal(pos):
+            return path
 
-    node = problem.startingState()
-    if problem.isGoal(node):
-        print("bfs alr complete")
-        return []  # empty list cus it's already complete?
-    frontier = Queue() 
-    frontier.push((node, None))  # current node, parent (None)
-    explored = []
-    parents = []  # parents[i] is the parent of frontier[i]
-
-    while True:
-        if frontier.isEmpty():
-            print("bfs frontier failure")
-            return  # failure... don't return anything
-        node = frontier.pop()
-        explored.append(node[0])
-        parents.append(node[1])
-        for successor_state in problem.successorStates(node[0]):
-            coord, direction, cost = successor_state
-            if coord not in explored: 
-                if problem.isGoal(coord):
-                    explored.append(coord)
-                    parents.append(node[0])
-                    path = tracePath(explored, parents)
-                    #directions = [Actions.vectorToDirection((path[i-1][0]-path[i][0], path[i-1][1]-path[i][1])) for i in range(len(path)-1, 0, -1)]
-                    directions = []
-                    for i in range(len(path)-1, 0, -1):
-                        xdif = path[i - 1][0] - path[i][0]
-                        ydif = path[i - 1][1] - path[i][1]
-                        d = Actions.vectorToDirection((xdif, ydif))
-                        #print(path[i])
-                        directions.append(d)
-                    print("bfs found path; directions=", directions)
-                    return directions
-                frontier.push((coord, node[0]))
+        for new_pos, direction, cost in problem.successorStates(pos):
+            if new_pos not in visited:
+                visited.append(new_pos)
+                new_path = path + [direction]  # dunno
+                frontier.push((new_pos, new_path))
 
 
 def uniformCostSearch(problem):
@@ -138,48 +103,43 @@ def uniformCostSearch(problem):
     """
 
     # *** Your Code Here ***
+#queue
+#visisted =[]
+#cost=0
+#push ((position, [], cost), cost)
+#while pq
+    #pos, path, orig_cost = pq.pop()
+    #append to visited
+    #if position is goal
+        #return path
+    #get successor states
+    #iterate through successors (for new_pos, path, cost in succ)
+        #if new_pos not in visited
+            #append to visited
+            #new_path = 
+            #new_cost = 
+            #push to pq
 
-    def tracePath(explored, parents):
-        #print(explored)
-
-        path = []
-        node = (explored[-1], parents[-1])  # last node in explored and parents = goal state
-        path.append(node[0])
-        # starting from goal state, traces the parents back until it gets to the source node (who's parent is None)
-        for i in range(len(explored)-1, -1, -1):
-            if parents[i] is None:
-                path.append(explored[i])
-                return path
-            if explored[i] == node[1]:
-                node = (explored[i], parents[i])
-                path.append(node[0])
-
-    node = problem.startingState()
-    if problem.isGoal(node):
-        return []  # empty list cus it's already complete?
     frontier = PriorityQueue()
-    frontier.push((node, None), 0)  # current node, parent (None)
-    explored = []
-    parents = []  # parents[i] is the parent of frontier[i]
+    visited = []
+    cost = 0
+    frontier.push((problem.startingState(), [], 0), 0)
 
-    while True:
-        if frontier.isEmpty():
-            return  # failure... don't return anything
-        node = frontier.pop()
-        explored.append(node[0])
-        parents.append(node[1])
-        for successor_state in problem.successorStates(node[0]):
-            coord, direction, cost = successor_state
-            if coord not in explored: 
-                if problem.isGoal(coord):
-                    explored.append(coord)
-                    parents.append(node[0])
-                    path = tracePath(explored, parents)
-                    #print(path)
-                    directions = [Actions.vectorToDirection((path[i - 1][0] - path[i][0], path[i - 1][1] - path[i][1])) for i in range(len(path) - 1, 0, -1)]
-                    
-                    return directions
-                frontier.push((coord, node[0]), cost)
+    while not frontier.isEmpty():
+        pos, path, orig_cost = frontier.pop()
+        if pos not in visited:  # might not need this
+            visited.append(pos)
+
+        if problem.isGoal(pos):
+            return path
+
+        for new_pos, direction, cost in problem.successorStates(pos):
+            if new_pos not in visited:
+                visited.append(new_pos)
+                new_path = path + [direction]  # dunno
+                new_cost = orig_cost + cost
+                frontier.push((new_pos, new_path, new_cost), new_cost)
+
 
 def aStarSearch(problem, heuristic):
     """
@@ -188,65 +148,23 @@ def aStarSearch(problem, heuristic):
 
     # *** Your Code Here ***
 
-    """
-    # when frontier/explored/parents has a <grid obj> in it 
-    def tracePath(explored, parents):
-        print(explored)
-        path = []
-        node = (explored[-1][0], parents[-1][0])
-        path.append(node[0])
-        for i in range(len(explored)-1, -1, -1):
-            if parents[i] is None:
-                path.append(explored[i][0])
-                return path
-            if explored[i][0] == node[1]:
-                node = (explored[i][0], parents[i][0])
-                path.append(node[0])"""
-    def tracePath(explored, parents):
-        path = []
-        node = (explored[-1], parents[-1])
-        path.append(node[0])
-        for i in range(len(explored)-1, -1, -1):
-            if explored[i] == node[1]:
-                node = (explored[i], parents[i])
-                path.append(node[0])
-            if node[1] is None:
-                return path
+    frontier = PriorityQueue()
+    visited = []
+    cost = 0
+    frontier.push((problem.startingState(), [], 0), 0)
 
+    while not frontier.isEmpty():
+        pos, path, orig_cost = frontier.pop()
+        if pos not in visited:  # might not need this
+            visited.append(pos)
 
-    node = problem.startingState()
-    if problem.isGoal(node):
-        return []  # empty list cus it's already complete?
-    frontier = PriorityQueue() 
-    frontier.push((node, None), 0)  # current node, parent (None)
-    explored = []
-    parents = []  # parents[i] is the parent of frontier[i]
+        if problem.isGoal(pos):
+            return path
 
-    while True:
-        if frontier.isEmpty():
-            return  # failure... don't return anything
-        node = frontier.pop()
-        explored.append(node[0])
-        parents.append(node[1])
-        for successor_state in problem.successorStates(node[0]):
-            coord, direction, cost = successor_state
-            if coord not in explored: 
-                if problem.isGoal(coord):
-                    explored.append(coord)
-                    parents.append(node[0])
-                    path = tracePath(explored, parents)
-                    #directions = [Actions.vectorToDirection((path[i-1][0]-path[i][0], path[i-1][1]-path[i][1])) for i in range(len(path)-1, 0, -1)]
-                    directions = []
-                    for i in range(len(path)-1, 0, -1):
-                        #print("path")
-                        #print(path)
-                        #print("tuple?", path[i-1][0])
-                        #print("tuple",path[i][0])
-                        xdif = path[i - 1][0] - path[i][0]
-                        ydif = path[i - 1][1] - path[i][1]
-                        d = Actions.vectorToDirection((xdif, ydif))
-                        #print(path[i])
-                        directions.append(d)
-                    
-                    return directions
-                frontier.push((coord, node[0]), cost + heuristic(coord, problem))
+        for new_pos, direction, cost in problem.successorStates(pos):
+            if new_pos not in visited:
+                visited.append(new_pos)
+                new_path = path + [direction]  # dunno
+                new_cost = orig_cost + cost + heuristic(new_pos, problem)
+                frontier.push((new_pos, new_path, new_cost), new_cost)
+
