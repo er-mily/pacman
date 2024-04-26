@@ -13,6 +13,9 @@ from pacai.core.search.position import PositionSearchProblem
 from pacai.core.search.problem import SearchProblem
 from pacai.agents.base import BaseAgent
 from pacai.agents.search.base import SearchAgent
+from pacai.core.directions import *
+from pacai.core import distance
+from pacai.student import search
 
 class CornersProblem(SearchProblem):
     """
@@ -64,7 +67,8 @@ class CornersProblem(SearchProblem):
                 logging.warning('Warning: no food in corner ' + str(corner))
 
         # *** Your Code Here ***
-        raise NotImplementedError()
+        self.state = [False, False, False, False]
+        self.goal = [True, True, True, True]
 
     def actionsCost(self, actions):
         """
@@ -72,7 +76,6 @@ class CornersProblem(SearchProblem):
         If those actions include an illegal move, return 999999.
         This is implemented for you.
         """
-
         if (actions is None):
             return 999999
 
@@ -84,6 +87,53 @@ class CornersProblem(SearchProblem):
                 return 999999
 
         return len(actions)
+
+    def startingState(self):
+        return self.startingPosition  # (x,y)
+
+    # goal = has reached all four corners
+    def isGoal(self, state):
+        print("State", state)
+        for i, corner in enumerate(self.corners):
+            if state == corner:
+                self.state[i] = True
+
+        if self.state != self.goal:
+            return False
+        print("goal state!")
+        print(self._visitedLocations)
+        print(self._visitHistory)
+        # gui
+        self._visitedLocations.add(state)
+        # Note: visit history requires coordinates not states. In this situation
+        # they are equivalent.
+        coordinates = state
+        self._visitHistory.append(coordinates)
+        return True
+
+    # Returns successor states, the actions they require, and a cost of 1.
+    def successorStates(self, state):
+        successors = []
+        for action in Directions.CARDINAL:
+            x, y = state 
+            dx, dy = Actions.directionToVector(action)
+            nextx, nexty = int(x + dx), int(y + dy)
+            hitsWall = self.walls[nextx][nexty]
+
+            if (not hitsWall):
+                # Construct the successor.
+                successors.append(((nextx, nexty), action, 1))  # i think cost is wrong
+        
+        # gui?
+        self._numExpanded += 1
+        if (state not in self._visitedLocations):
+            self._visitedLocations.add(state)
+            # Note: visit history requires coordinates not states. In this situation
+            # they are equivalent.
+            coordinates = state
+            self._visitHistory.append(coordinates)
+
+        return successors
 
 def cornersHeuristic(state, problem):
     """
@@ -100,7 +150,7 @@ def cornersHeuristic(state, problem):
     # walls = problem.walls  # These are the walls of the maze, as a Grid.
 
     # *** Your Code Here ***
-    return heuristic.null(state, problem)  # Default to trivial solution
+    return heuristic.manhattan(state, problem)
 
 def foodHeuristic(state, problem):
     """
@@ -131,10 +181,14 @@ def foodHeuristic(state, problem):
     Subsequent calls to this heuristic can access problem.heuristicInfo['wallCount'].
     """
 
-    position, foodGrid = state
-
     # *** Your Code Here ***
-    return heuristic.null(state, problem)  # Default to the null heuristic.
+    position, foodGrid = state
+    dist = 0
+    for foodCord in foodGrid.asList():
+        if distance.manhattan(position, foodCord) > dist:
+            dist = distance.manhattan(position, foodCord)
+
+    return dist
 
 class ClosestDotSearchAgent(SearchAgent):
     """
@@ -170,13 +224,15 @@ class ClosestDotSearchAgent(SearchAgent):
         """
 
         # Here are some useful elements of the startState
-        # startPosition = gameState.getPacmanPosition()
+        startPosition = gameState.getPacmanPosition()
         # food = gameState.getFood()
         # walls = gameState.getWalls()
         # problem = AnyFoodSearchProblem(gameState)
 
         # *** Your Code Here ***
-        raise NotImplementedError()
+        problem = AnyFoodSearchProblem(gameState, start=startPosition)
+        path = search.uniformCostSearch(problem)
+        return path
 
 class AnyFoodSearchProblem(PositionSearchProblem):
     """
@@ -204,6 +260,11 @@ class AnyFoodSearchProblem(PositionSearchProblem):
 
         # Store the food for later reference.
         self.food = gameState.getFood()
+
+    def isGoal(self, state):
+        if state in self.food.asList():
+            return True
+        return False
 
 class ApproximateSearchAgent(BaseAgent):
     """
