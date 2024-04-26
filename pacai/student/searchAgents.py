@@ -66,9 +66,6 @@ class CornersProblem(SearchProblem):
             if not startingGameState.hasFood(*corner):
                 logging.warning('Warning: no food in corner ' + str(corner))
 
-        # *** Your Code Here ***
-        self.state = [False, False, False, False]
-        self.goal = [True, True, True, True]
 
     def actionsCost(self, actions):
         """
@@ -89,48 +86,49 @@ class CornersProblem(SearchProblem):
         return len(actions)
 
     def startingState(self):
-        return self.startingPosition  # (x,y)
+        return (self.startingPosition, set())  # (x,y), [corners visited]
 
     # goal = has reached all four corners
     def isGoal(self, state):
-        print("State", state)
-        for i, corner in enumerate(self.corners):
-            if state == corner:
-                self.state[i] = True
-
-        if self.state != self.goal:
+        pos, cornersVisited = state
+        if len(cornersVisited) != 4:
             return False
-        print("goal state!")
-        print(self._visitedLocations)
-        print(self._visitHistory)
+        
         # gui
-        self._visitedLocations.add(state)
+        self._visitedLocations.add(pos)
         # Note: visit history requires coordinates not states. In this situation
         # they are equivalent.
-        coordinates = state
-        self._visitHistory.append(coordinates)
+        coordinates = pos
+        self._visitHistory.append(pos)
         return True
 
     # Returns successor states, the actions they require, and a cost of 1.
     def successorStates(self, state):
         successors = []
         for action in Directions.CARDINAL:
-            x, y = state 
+            pos, cornersVisited = state 
+            childCorners = cornersVisited.copy()
+            x, y = pos
             dx, dy = Actions.directionToVector(action)
             nextx, nexty = int(x + dx), int(y + dy)
             hitsWall = self.walls[nextx][nexty]
+            
 
             if (not hitsWall):
+                # updated cornersVisited
+                if (x, y) in self.corners:
+                    childCorners.add((x, y))
+                
                 # Construct the successor.
-                successors.append(((nextx, nexty), action, 1))  # i think cost is wrong
+                successors.append((((nextx, nexty), childCorners), action, 1))
         
         # gui?
         self._numExpanded += 1
-        if (state not in self._visitedLocations):
-            self._visitedLocations.add(state)
+        if (pos not in self._visitedLocations):
+            self._visitedLocations.add(pos)
             # Note: visit history requires coordinates not states. In this situation
             # they are equivalent.
-            coordinates = state
+            coordinates = pos
             self._visitHistory.append(coordinates)
 
         return successors
@@ -150,7 +148,16 @@ def cornersHeuristic(state, problem):
     # walls = problem.walls  # These are the walls of the maze, as a Grid.
 
     # *** Your Code Here ***
-    return heuristic.manhattan(state, problem)
+    pos, visitedCorners = state
+    unvisitedCorners = set(problem.corners).difference(visitedCorners)
+    
+    # find the closest corner -- actually will try furthest first
+    dist = 0 
+    for corner in unvisitedCorners:
+        dist = max(dist, distance.manhattan(corner, pos))
+
+    #return dist
+    return 1 
 
 def foodHeuristic(state, problem):
     """
@@ -185,8 +192,7 @@ def foodHeuristic(state, problem):
     position, foodGrid = state
     dist = 0
     for foodCord in foodGrid.asList():
-        if distance.manhattan(position, foodCord) > dist:
-            dist = distance.manhattan(position, foodCord)
+        dist = max(dist, distance.manhattan(position, foodCord))
 
     return dist
 
