@@ -149,22 +149,22 @@ def aStarSearch(problem, heuristic):
     # *** Your Code Here ***
 
     frontier = PriorityQueue()
-    visited = []
+    visited = set()
     cost = 0
     frontier.push((problem.startingState(), [], 0), 0)
 
     while not frontier.isEmpty():
         pos, path, orig_cost = frontier.pop()
-        if pos not in visited:  # might not need this
-            visited.append(pos)
+        #if pos not in visited:  # might not need this
+        #visited.add(pos)
 
         if problem.isGoal(pos):
             return path
 
-        for new_pos, direction, cost in problem.successorStates(pos):
+        for new_pos, direction, new_cost in problem.successorStates(pos):
             if new_pos not in visited:
-                visited.append(new_pos)
+                visited.add(new_pos)
                 new_path = path + [direction]  # dunno
-                new_cost = orig_cost + cost + heuristic(new_pos, problem)
-                frontier.push((new_pos, new_path, new_cost), new_cost)
+                cost = orig_cost + new_cost + heuristic(new_pos, problem)
+                frontier.push((new_pos, new_path, cost), cost)
 
