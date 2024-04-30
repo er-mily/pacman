@@ -4,6 +4,8 @@ from pacai.agents.base import BaseAgent
 from pacai.agents.search.multiagent import MultiAgentSearchAgent
 from pacai.core import distance
 
+INF = 100000
+
 class ReflexAgent(BaseAgent):
     """
     A reflex agent chooses an action at each choice point by examining
@@ -115,6 +117,8 @@ class MinimaxAgent(MultiAgentSearchAgent):
     def __init__(self, index, **kwargs):
         super().__init__(index, **kwargs)
 
+    # i somehow broke this :( ...
+    # should really move to pyscharm for the versin control or just save more often
     def getAction(self, gameState):
         actions = gameState.getLegalActions()
         actions.remove('Stop')
@@ -136,7 +140,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         actions = gameState.getLegalActions()
         actions.remove('Stop')
         for action in actions:
-            val = max(val, self.minVal(gameState.generateSuccessor(0, action), depth+1))
+            val = max(val, self.minVal(gameState.generateSuccessor(0, action), depth))
         print("maxVal, depth", depth, "val:", val)
         return val
 
@@ -166,6 +170,49 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
     def __init__(self, index, **kwargs):
         super().__init__(index, **kwargs)
+    
+    """# gonna assume this is all the same, even though the psuedo code in the txtb looks a bit diff
+    def getAction(self, gameState):
+        actions = gameState.getLegalActions()
+        actions.remove('Stop')
+        bestVal = -INF
+        bestAction = ''
+        for action in actions:
+           val = self.minVal(gameState.generateSuccessor(0, action), 0, -INF, INF)
+           if val > bestVal:
+               bestVal = val
+               bestAction = action
+        
+        return bestAction
+
+    def maxVal(self, gameState, depth, a, b):
+        if depth >= self.getTreeDepth() or gameState.isOver():
+            return self.getEvaluationFunction()(gameState)
+
+        val = -INF        
+        actions = gameState.getLegalActions()
+        actions.remove('Stop')
+        for action in actions:
+            val = max(val, self.minVal(gameState.generateSuccessor(0, action), depth, a, b))
+            print('val:', val, ', b:', b)
+            if val >= b:
+                return val
+            a = max(a, val)
+        return val
+
+    def minVal(self, gameState, depth, a, b):
+        if depth >= self.getTreeDepth() or gameState.isOver():
+            return self.getEvaluationFunction()(gameState)
+
+        val = INF
+        for agentIndex in range(1, gameState.getNumAgents()):
+            actions = gameState.getLegalActions(agentIndex=agentIndex)
+            for action in actions:
+                val = min(val, self.maxVal(gameState.generateSuccessor(agentIndex, action), depth+1, a, b))
+                if val <= a:
+                    return val
+                b = min(b, val)
+        return val"""
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
