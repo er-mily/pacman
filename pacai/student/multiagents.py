@@ -64,25 +64,25 @@ class ReflexAgent(BaseAgent):
         # find dist to nearest food
         foodDist = 10000
         for food in oldFood.asList():
-            foodDist = min(foodDist, distance.manhattan(newPosition, food)+1)
-        score = 1/foodDist * 10
+            foodDist = min(foodDist, distance.manhattan(newPosition, food) + 1)
+        score = 1 / foodDist * 10
         
         # find dist to nearest ghost, find scareTimer of that nearest ghost
         ghostDist = 10000
         scaredTimer = 0
         for ghostState in newGhostStates:
             ghostPos = (int(ghostState.getPosition()[0]), int(ghostState.getPosition()[1]))
-            if ghostDist > distance.manhattan(newPosition, ghostPos)+1:
-                ghostDist = distance.manhattan(newPosition, ghostPos)+1
+            if ghostDist > distance.manhattan(newPosition, ghostPos) + 1:
+                ghostDist = distance.manhattan(newPosition, ghostPos) + 1
                 scaredTimer = ghostState.getScaredTimer()
         
         if scaredTimer > 0:
             # if it's possible to catch up to them, then head in their direction
             if ghostDist < scaredTimer:
-                score += 1/ghostDist * 50
+                score += 1 / ghostDist * 50
         else:
             if ghostDist < 3:
-                score -= 1/ghostDist * 30
+                score -= 1 / ghostDist * 30
 
         return score
 
@@ -125,10 +125,10 @@ class MinimaxAgent(MultiAgentSearchAgent):
         bestVal = -10000
         bestAction = ''
         for action in actions:
-           val = self.minVal(gameState.generateSuccessor(0, action), 0)
-           if val > bestVal:
-               bestVal = val
-               bestAction = action
+            val = self.minVal(gameState.generateSuccessor(0, action), 0)
+            if val > bestVal:
+                bestVal = val
+                bestAction = action
         
         return bestAction
 
@@ -141,7 +141,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         actions = gameState.getLegalActions()
         actions.remove('Stop')
         for action in actions:
-            val = max(val, self.minVal(gameState.generateSuccessor(0, action), depth+1))
+            val = max(val, self.minVal(gameState.generateSuccessor(0, action), depth + 1))
         return val
 
     def minVal(self, gameState, depth):
@@ -153,7 +153,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         for agentIndex in range(1, gameState.getNumAgents()):
             actions = gameState.getLegalActions(agentIndex=agentIndex)
             for action in actions:
-                val = min(val, self.maxVal(gameState.generateSuccessor(agentIndex, action), depth+1))
+                val = min(val, self.maxVal(gameState.generateSuccessor(agentIndex, action), depth + 1))
         return val
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
@@ -178,10 +178,10 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         bestVal = -10000
         bestAction = ''
         for action in actions:
-           val = self.minVal(gameState.generateSuccessor(0, action), 0, -10000, 10000)
-           if val > bestVal:
-               bestVal = val
-               bestAction = action
+            val = self.minVal(gameState.generateSuccessor(0, action), 0, -10000, 10000)
+            if val > bestVal:
+                bestVal = val
+                bestAction = action
         
         return bestAction
 
@@ -189,7 +189,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         if depth >= self.getTreeDepth() or gameState.isOver():
             return self.getEvaluationFunction()(gameState)
 
-        val = -10000        
+        val = -10000
         actions = gameState.getLegalActions()
         actions.remove('Stop')
         for action in actions:
@@ -207,7 +207,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         for agentIndex in range(1, gameState.getNumAgents()):
             actions = gameState.getLegalActions(agentIndex=agentIndex)
             for action in actions:
-                val = min(val, self.maxVal(gameState.generateSuccessor(agentIndex, action), depth+1, a, b))
+                val = min(val, self.maxVal(gameState.generateSuccessor(agentIndex, action), depth + 1, a, b))
                 if val <= a:
                     return val
                 b = min(b, val)
@@ -230,11 +230,54 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     def __init__(self, index, **kwargs):
         super().__init__(index, **kwargs)
 
+    def getAction(self, gameState):
+        actions = gameState.getLegalActions()
+        actions.remove('Stop')
+        bestVal = -10000
+        bestAction = ''
+        for action in actions:
+           val = self.chanceVal(gameState.generateSuccessor(0, action), 0)
+           if val > bestVal:
+               bestVal = val
+               bestAction = action
+        
+        return bestAction
+
+    def maxVal(self, gameState, depth):
+        if depth >= self.getTreeDepth() or gameState.isOver():
+            return self.getEvaluationFunction()(gameState)
+        
+        val = -10000  # is this ok for negative infinite?
+        
+        actions = gameState.getLegalActions()
+        actions.remove('Stop')
+        for action in actions:
+            val = max(val, self.chanceVal(gameState.generateSuccessor(0, action), depth + 1))
+        return val
+
+    def chanceVal(self, gameState, depth):
+        if depth >= self.getTreeDepth() or gameState.isOver():
+            return self.getEvaluationFunction()(gameState)
+        
+        val = 0
+        numStates = 0
+        
+        for agentIndex in range(1, gameState.getNumAgents()):
+            actions = gameState.getLegalActions(agentIndex=agentIndex)
+            for action in actions:
+                numStates += 1
+                val += self.maxVal(gameState.generateSuccessor(agentIndex, action), depth + 1)
+                
+        return val / numStates
+
+
 def betterEvaluationFunction(currentGameState):
     """
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable evaluation function.
 
     DESCRIPTION: <write something here so we know what you did>
+    - maybe use bfs (or whatever fastest path alg) to calc the path size
+
     """
 
     return currentGameState.getScore()
