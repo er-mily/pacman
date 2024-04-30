@@ -2,6 +2,7 @@ import random
 
 from pacai.agents.base import BaseAgent
 from pacai.agents.search.multiagent import MultiAgentSearchAgent
+from pacai.core import distance
 
 class ReflexAgent(BaseAgent):
     """
@@ -46,19 +47,43 @@ class ReflexAgent(BaseAgent):
         and an action, and returns a number, where higher numbers are better.
         Make sure to understand the range of different values before you combine them
         in your evaluation function.
+
         """
 
-        successorGameState = currentGameState.generatePacmanSuccessor(action)
 
         # Useful information you can extract.
-        # newPosition = successorGameState.getPacmanPosition()
-        # oldFood = currentGameState.getFood()
-        # newGhostStates = successorGameState.getGhostStates()
-        # newScaredTimes = [ghostState.getScaredTimer() for ghostState in newGhostStates]
+        successorGameState = currentGameState.generatePacmanSuccessor(action)
+        newPosition = successorGameState.getPacmanPosition()
+        oldFood = currentGameState.getFood()
+        newGhostStates = successorGameState.getGhostStates()
+        newScaredTimes = [ghostState.getScaredTimer() for ghostState in newGhostStates]
 
         # *** Your Code Here ***
 
-        return successorGameState.getScore()
+        # find dist to nearest food
+        foodDist = 10000
+        for food in oldFood.asList():
+            foodDist = min(foodDist, distance.manhattan(newPosition, food)+1)
+        score = 1/foodDist * 10
+        
+        # find dist to nearest ghost, find scareTimer of that nearest ghost
+        ghostDist = 10000
+        scaredTimer = 0
+        for ghostState in newGhostStates:
+            ghostPos = (int(ghostState.getPosition()[0]), int(ghostState.getPosition()[1]))
+            if ghostDist > distance.manhattan(newPosition, ghostPos)+1:
+                ghostDist = distance.manhattan(newPosition, ghostPos)+1
+                scaredTimer = ghostState.getScaredTimer()
+        
+        if scaredTimer > 0:
+            # if it's possible to catch up to them, then head in their direction
+            if ghostDist < scaredTimer:
+                score += 1/ghostDist * 50
+        else:
+            if ghostDist < 3:
+                score -= 1/ghostDist * 30
+
+        return score
 
 class MinimaxAgent(MultiAgentSearchAgent):
     """
@@ -89,6 +114,43 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
     def __init__(self, index, **kwargs):
         super().__init__(index, **kwargs)
+
+    def getAction(self, gameState):
+        actions = gameState.getLegalActions()
+        actions.remove('Stop')
+        bestVal = -10000
+        bestAction = ''
+        for action in actions:
+           val = self.minVal(gameState.generateSuccessor(0, action), 0)
+           if val > bestVal:
+               bestVal = val
+               bestAction = action
+        
+        return bestAction
+
+    def maxVal(self, gameState, depth):
+        if depth >= self.getTreeDepth() or gameState.isOver():
+            return self.getEvaluationFunction()(gameState)
+        val = -100000  # is this ok for negative infinite?
+        
+        actions = gameState.getLegalActions()
+        actions.remove('Stop')
+        for action in actions:
+            val = max(val, self.minVal(gameState.generateSuccessor(0, action), depth+1))
+        print("maxVal, depth", depth, "val:", val)
+        return val
+
+    def minVal(self, gameState, depth):
+        if depth >= self.getTreeDepth() or gameState.isOver():
+            return self.getEvaluationFunction()(gameState)
+        val = 100000  # is this ok for infinite?
+        
+        for agentIndex in range(1, gameState.getNumAgents()):
+            actions = gameState.getLegalActions(agentIndex=agentIndex)
+            for action in actions:
+                val = min(val, self.maxVal(gameState.generateSuccessor(agentIndex, action), depth+1))
+        print("minVal, depth", depth, "val:", val)
+        return val
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
