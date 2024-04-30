@@ -4,7 +4,6 @@ from pacai.agents.base import BaseAgent
 from pacai.agents.search.multiagent import MultiAgentSearchAgent
 from pacai.core import distance
 
-INF = 100000
 
 class ReflexAgent(BaseAgent):
     """
@@ -119,6 +118,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
     # i somehow broke this :( ...
     # should really move to pyscharm for the versin control or just save more often
+    # shoulda saved immediately after the successful autograder test...
     def getAction(self, gameState):
         actions = gameState.getLegalActions()
         actions.remove('Stop')
@@ -135,25 +135,25 @@ class MinimaxAgent(MultiAgentSearchAgent):
     def maxVal(self, gameState, depth):
         if depth >= self.getTreeDepth() or gameState.isOver():
             return self.getEvaluationFunction()(gameState)
-        val = -100000  # is this ok for negative infinite?
+        
+        val = -10000  # is this ok for negative infinite?
         
         actions = gameState.getLegalActions()
         actions.remove('Stop')
         for action in actions:
-            val = max(val, self.minVal(gameState.generateSuccessor(0, action), depth))
-        print("maxVal, depth", depth, "val:", val)
+            val = max(val, self.minVal(gameState.generateSuccessor(0, action), depth+1))
         return val
 
     def minVal(self, gameState, depth):
         if depth >= self.getTreeDepth() or gameState.isOver():
             return self.getEvaluationFunction()(gameState)
-        val = 100000  # is this ok for infinite?
+        
+        val = 10000  # is this ok for infinite?
         
         for agentIndex in range(1, gameState.getNumAgents()):
             actions = gameState.getLegalActions(agentIndex=agentIndex)
             for action in actions:
                 val = min(val, self.maxVal(gameState.generateSuccessor(agentIndex, action), depth+1))
-        print("minVal, depth", depth, "val:", val)
         return val
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
@@ -171,14 +171,14 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     def __init__(self, index, **kwargs):
         super().__init__(index, **kwargs)
     
-    """# gonna assume this is all the same, even though the psuedo code in the txtb looks a bit diff
+    # gonna assume this is all the same, even though the psuedo code in the txtb looks a bit diff
     def getAction(self, gameState):
         actions = gameState.getLegalActions()
         actions.remove('Stop')
-        bestVal = -INF
+        bestVal = -10000
         bestAction = ''
         for action in actions:
-           val = self.minVal(gameState.generateSuccessor(0, action), 0, -INF, INF)
+           val = self.minVal(gameState.generateSuccessor(0, action), 0, -10000, 10000)
            if val > bestVal:
                bestVal = val
                bestAction = action
@@ -189,12 +189,11 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         if depth >= self.getTreeDepth() or gameState.isOver():
             return self.getEvaluationFunction()(gameState)
 
-        val = -INF        
+        val = -10000        
         actions = gameState.getLegalActions()
         actions.remove('Stop')
         for action in actions:
             val = max(val, self.minVal(gameState.generateSuccessor(0, action), depth, a, b))
-            print('val:', val, ', b:', b)
             if val >= b:
                 return val
             a = max(a, val)
@@ -204,7 +203,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         if depth >= self.getTreeDepth() or gameState.isOver():
             return self.getEvaluationFunction()(gameState)
 
-        val = INF
+        val = 10000
         for agentIndex in range(1, gameState.getNumAgents()):
             actions = gameState.getLegalActions(agentIndex=agentIndex)
             for action in actions:
@@ -212,7 +211,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                 if val <= a:
                     return val
                 b = min(b, val)
-        return val"""
+        return val
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
