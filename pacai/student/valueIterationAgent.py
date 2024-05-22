@@ -1,4 +1,6 @@
 from pacai.agents.learning.value import ValueEstimationAgent
+from pacai.core import mdp
+import copy
 
 class ValueIterationAgent(ValueEstimationAgent):
     """
@@ -39,7 +41,16 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.values = {}  # A dictionary which holds the q-values for each state.
 
         # Compute the values here.
-        raise NotImplementedError()
+        
+        for i in range(self.iters):
+            temp = copy.deepcopy(self.values)
+            for state in self.mdp.getStates():
+                action = self.getAction(state)
+                if self.mdp.isTerminal(state):# or action == 'exit':
+                    continue
+                temp[state] = self.getQValue(state, action)
+            self.values = temp
+
 
     def getValue(self, state):
         """
@@ -54,3 +65,41 @@ class ValueIterationAgent(ValueEstimationAgent):
         """
 
         return self.getPolicy(state)
+
+    def getQValue(self, state, action):
+        """
+        returns the value of the state??
+        how is this different from getValue? what is a q value??
+        """
+        maxq = 0
+        for nextState, prob in self.mdp.getTransitionStatesAndProbs(state, action):
+            transitionReward = self.mdp.getReward(state, action, nextState)
+            qval = prob * (transitionReward + self.discountRate*self.getValue(nextState))        
+            maxq += qval
+        #self.values[state] = maxq
+        return maxq
+
+    def getPolicy(self, state):
+        """
+        Returns the best action to take, given the current state
+        best action = has the highest q value
+        """
+
+        actions = self.mdp.getPossibleActions(state)
+        bestAction = ''
+        maxQ = -1
+        
+        if self.mdp.isTerminal(state) or len(actions) == 0:
+            return None
+        for i, action in enumerate(actions):
+            q = self.getQValue(state, action)
+            if i == 0:
+                maxQ = q
+                bestAction = action
+                continue      
+            if q > maxQ:
+                maxQ = q
+                bestAction = action
+        
+        return bestAction
+
