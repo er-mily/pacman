@@ -1,5 +1,13 @@
 from pacai.agents.learning.reinforcement import ReinforcementAgent
 from pacai.util import reflection
+from pacai.util import probability
+import random
+import copy
+
+# QUESTIONS
+# what is updpate() supposed to do? inputs?
+# what is init supposed to do?
+# psuedocode -- what does the N table?
 
 class QLearningAgent(ReinforcementAgent):
     """
@@ -46,6 +54,7 @@ class QLearningAgent(ReinforcementAgent):
         super().__init__(index, **kwargs)
 
         # You can initialize Q-values here.
+        self.values = {}
 
     def getQValue(self, state, action):
         """
@@ -54,7 +63,7 @@ class QLearningAgent(ReinforcementAgent):
         Should return 0.0 if the (state, action) pair has never been seen.
         """
 
-        return 0.0
+        return self.values.get((state, action), 0.0)
 
     def getValue(self, state):
         """
@@ -68,8 +77,14 @@ class QLearningAgent(ReinforcementAgent):
         which returns the actual best action.
         Whereas this method returns the value of the best action.
         """
-
-        return 0.0
+        maxVal = 0
+        for i, action in enumerate(self.getLegalActions(state)):
+            q = self.getQValue(state, action)
+            if i == 0:
+                maxVal = q
+            else:
+                maxVal = max(q, maxVal)
+        return maxVal
 
     def getPolicy(self, state):
         """
@@ -83,8 +98,52 @@ class QLearningAgent(ReinforcementAgent):
         which returns the value of the best action.
         Whereas this method returns the best action itself.
         """
+        maxVal = 0
+        maxAction = None
+        for i, action in enumerate(self.getLegalActions(state)):
+            q = self.getQValue(state, action)
+            if i == 0:
+                maxVal = q
+                maxAction = action
+            else:
+                if q > maxVal:
+                    maxVal = q
+                    maxAction = action
 
-        return None
+        return maxAction
+
+    def getAction(self, state):
+        """
+        Compute the action to take in the current state.
+        With probability `pacai.agents.learning.reinforcement.ReinforcementAgent.getEpsilon`,
+        we should take a random action and take the best policy action otherwise.
+        Note that if there are no legal actions, which is the case at the terminal state,
+        you should choose None as the action.
+        """
+        # [EPISILON] chance --> random action
+        if probability.flipCoin(self.getEpsilon()):
+            actions = self.getLegalActions(state)
+            if len(actions) == 0:
+                return None
+            return random.choice(self.getLegalActions(state))
+        else:  # follow the policy
+            return self.getPolicy(state)
+    
+    def update(self, state, action, nextState, reward):
+        """
+        The parent class calls this to observe a state transition and reward.
+        You should do your Q-Value update here.
+        Note that you should never call this function, it will be called on your behalf.
+        """
+        #temp = copy.deepcopy(self.values)
+        a = self.getAlpha()
+        d = self.getDiscountRate()
+
+        # a(new) + (1-a)(old)
+        #temp[(state, action)] = (a * (reward + d * self.getValue(nextState))) + ((1 - a) * self.getQValue(state, action))
+        self.values[(state, action)] = (a * (reward + d * self.getValue(nextState))) + ((1 - a) * self.getQValue(state, action))
+        #self.values = temp
+
 
 class PacmanQAgent(QLearningAgent):
     """
