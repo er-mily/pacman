@@ -2,12 +2,10 @@ from pacai.agents.learning.reinforcement import ReinforcementAgent
 from pacai.util import reflection
 from pacai.util import probability
 import random
-import copy
 
 # QUESTIONS
-# what is updpate() supposed to do? inputs?
-# what is init supposed to do?
-# psuedocode -- what does the N table?
+# foro #6, how do i know that the policy is optimal? i think it's supposed to cross the bridge
+# from left -> right
 
 class QLearningAgent(ReinforcementAgent):
     """
@@ -135,14 +133,11 @@ class QLearningAgent(ReinforcementAgent):
         You should do your Q-Value update here.
         Note that you should never call this function, it will be called on your behalf.
         """
-        #temp = copy.deepcopy(self.values)
         a = self.getAlpha()
         d = self.getDiscountRate()
 
         # a(new) + (1-a)(old)
-        #temp[(state, action)] = (a * (reward + d * self.getValue(nextState))) + ((1 - a) * self.getQValue(state, action))
         self.values[(state, action)] = (a * (reward + d * self.getValue(nextState))) + ((1 - a) * self.getQValue(state, action))
-        #self.values = temp
 
 
 class PacmanQAgent(QLearningAgent):
@@ -169,6 +164,7 @@ class PacmanQAgent(QLearningAgent):
 
         return action
 
+
 class ApproximateQAgent(PacmanQAgent):
     """
     An approximate Q-learning agent.
@@ -189,16 +185,19 @@ class ApproximateQAgent(PacmanQAgent):
     DESCRIPTION: <Write something here so we know what you did.>
     """
 
-    def __init__(self, index,
-            extractor = 'pacai.core.featureExtractors.IdentityExtractor', **kwargs):
+    def __init__(self, index, extractor = 'pacai.core.featureExtractors.IdentityExtractor', **kwargs):
         super().__init__(index, **kwargs)
         self.featExtractor = reflection.qualifiedImport(extractor)
 
         # You might want to initialize weights here.
+        self.weights = {}
 
     def final(self, state):
         """
         Called at the end of each game.
+        .. what is this supposed to do ?
+        is it supposed to return anything? the parent final() doesn't return anything so..
+        maybe it's just for debugging?
         """
 
         # Call the super-class final method.
@@ -208,4 +207,40 @@ class ApproximateQAgent(PacmanQAgent):
         if self.episodesSoFar == self.numTraining:
             # You might want to print your weights here for debugging.
             # *** Your Code Here ***
-            raise NotImplementedError()
+            print("done training!")
+
+            # raise NotImplementedError()
+
+    def getQValue(self, state, action):
+        """
+        `QLearningAgent.getQValue`:
+        Should return `Q(state, action) = w * featureVector`,
+        where `*` is the dotProduct operator.
+        if weights are empty, it should be 1
+        """
+        dotProd = 0
+        #print(self.featExtractor)
+        #print("state", state)
+        features = self.featExtractor.getFeatures(state, state, action)
+        # print("getqval features", features)
+        #for state, action in features.keys():
+        #    dotProd += features[(state, action)] * self.weights.get((state, action), 1.0)
+        for feature in features.keys():
+            dotProd += features[feature] * self.weights.get(feature, 1.0)
+        return dotProd
+
+
+    def update(self, state, action, nextState, reward):
+        """
+        Should update your weights based on transition.
+        """
+        features = self.featExtractor.getFeatures(state, state, action)
+        print("update: features", features)
+        a = self.getAlpha()
+        d = self.getDiscountRate()
+        # i'm just doing random stuff
+        if (state, action) not in self.weights.keys():
+            self.weights[(state, action)] = 0
+        self.weights[(state, action)] += a * (reward + d * self.getValue(nextState) - self.getQValue(state, action)) * features[(state, action)]
+
+
