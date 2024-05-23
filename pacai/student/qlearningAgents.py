@@ -185,7 +185,8 @@ class ApproximateQAgent(PacmanQAgent):
     DESCRIPTION: <Write something here so we know what you did.>
     """
 
-    def __init__(self, index, extractor = 'pacai.core.featureExtractors.IdentityExtractor', **kwargs):
+    def __init__(self, index, 
+        extractor = 'pacai.core.featureExtractors.IdentityExtractor', **kwargs):
         super().__init__(index, **kwargs)
         self.featExtractor = reflection.qualifiedImport(extractor)
 
@@ -222,9 +223,6 @@ class ApproximateQAgent(PacmanQAgent):
         #print(self.featExtractor)
         #print("state", state)
         features = self.featExtractor.getFeatures(state, state, action)
-        # print("getqval features", features)
-        #for state, action in features.keys():
-        #    dotProd += features[(state, action)] * self.weights.get((state, action), 1.0)
         for feature in features.keys():
             dotProd += features[feature] * self.weights.get(feature, 1.0)
         return dotProd
@@ -239,8 +237,9 @@ class ApproximateQAgent(PacmanQAgent):
         a = self.getAlpha()
         d = self.getDiscountRate()
         # i'm just doing random stuff
-        if (state, action) not in self.weights.keys():
-            self.weights[(state, action)] = 0
-        self.weights[(state, action)] += a * (reward + d * self.getValue(nextState) - self.getQValue(state, action)) * features[(state, action)]
+        for feature in features.keys():
+            if feature not in self.weights.keys():
+                self.weights[feature] = 0
+            self.weights[feature] += a * (reward + d * self.getValue(nextState) - self.getQValue(state, action)) * features[feature]
 
 
