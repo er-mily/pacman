@@ -11,8 +11,9 @@ NOT_POSSIBLE = None
 
 def question2():
     """
-    I ran the agent on Discount grid with the default values, and in 10/10 episodes it already
-    preferred the close exit, risking the cliff. So I didn't change anything here.
+    I ran the agent on Discount grid with the default values, and in 10/10 episodes
+    it already preferred the close exit, risking the cliff. So I didn't change
+    anything here.
     """
 
     answerDiscount = 0.9
@@ -22,7 +23,10 @@ def question2():
 
 def question3a():
     """
-    Since the game will end quick (low discount), it tries to get to an exit as fast as possible, which is why it chooses the closer exit. Since the agent is able to move precisely (noise is 0), it'll choose to take the cliff since it's faster and it's safe.
+    Since the game will end quick (low discount), it tries to get to an exit as
+    fast as possible, which is why it chooses the closer exit. Since the agent
+    is able to move precisely (noise is 0), it'll choose to take the cliff
+    since it's faster and it's safe.
     """
 
     answerDiscount = 0.3
@@ -33,7 +37,10 @@ def question3a():
 
 def question3b():
     """
-    Since the game will end quick (low discount), it tries to get to an exit as fast as possible, which is why it chooses the closer exit. Since the agent is NOT able to move precisely (noise is 0.2), it'll avoid the cliff since that's safer.
+    Since the game will end quick (low discount), it tries to get to an
+    exit as fast as possible, which is why it chooses the closer exit.
+    Since the agent is NOT able to move precisely (noise is 0.2),
+    it'll avoid the cliff since that's safer.
     """
 
     answerDiscount = 0.3
@@ -44,7 +51,9 @@ def question3b():
 
 def question3c():
     """
-    When the agent is able to move precisely (so noise is 0), it doesn't need to worry about accidently falling off the cliff, so it chooses to take that route since it's faster.
+    When the agent is able to move precisely (so noise is 0), it doesn't
+    need to worry about accidently falling off the cliff, so it chooses
+    to take that route since it's faster.
     """
 
     answerDiscount = 0.7
@@ -55,7 +64,8 @@ def question3c():
 
 def question3d():
     """
-    Since there is a slight reward for living, the agent is more likely to start by going upwards since it's further away from the cliff.
+    Since there is a slight reward for living, the agent is more likely
+    to start by going upwards since it's further away from the cliff.
     """
 
     answerDiscount = 0.9
@@ -66,7 +76,8 @@ def question3d():
 
 def question3e():
     """
-    I made the living reward very high, so the agent is incentivized to live forever, staying away from the cliffs and never going to either exits.
+    I made the living reward very high, so the agent is incentivized to
+    live forever, staying away from the cliffs and never going to either exits.
     """
 
     answerDiscount = 0.9
@@ -77,20 +88,12 @@ def question3e():
 
 def question6():
     """
-    [Enter a description of what you did here.]
-    Don't know if (1, 0.8) is right, but the logic is that high epsilon -> it'll try out all the routes, 
-    even if they aren't optimal; this helps reinforce the agent's knowledge that the cliff is bad.
-    and.. there was no logic behind the learning rate
-
-    update: idt its possible
-    
+    I tried various combinations of epsilons and learning rates, and when the agent
+    is only given 50 epsides to train, it's unable to randomly reach all the squares,
+    so it's unable to cross the bridge.
     """
 
-    answerEpsilon = 1.0 # 0.3
-    answerLearningRate = 0.8 # 0.5
-
     return NOT_POSSIBLE
-    #return answerEpsilon, answerLearningRate
 
 if __name__ == '__main__':
     questions = [

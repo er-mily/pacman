@@ -45,7 +45,11 @@ class QLearningAgent(ReinforcementAgent):
     You should do your Q-Value update here.
     Note that you should never call this function, it will be called on your behalf.
 
-    DESCRIPTION: <Write something here so we know what you did.>
+    DESCRIPTION: at the end of each move, update() updates the q values of the
+    (state, action) that just occured using the q-learning formula:
+    alpha*(new val) + (1-alpha)*(old q)
+    where the new val is (reward + discount*valueOfMove). The move for valueOfMove is
+    the move from the given state that has the highest q val.
     """
 
     def __init__(self, index, **kwargs):
@@ -137,8 +141,8 @@ class QLearningAgent(ReinforcementAgent):
         d = self.getDiscountRate()
 
         # a(new) + (1-a)(old)
-        self.values[(state, action)] = (a * (reward + d * self.getValue(nextState))) +\
-        ((1 - a) * self.getQValue(state, action))
+        self.values[(state, action)] = (a * (reward + d * self.getValue(nextState))) + \
+            ((1 - a) * self.getQValue(state, action))
 
 
 class PacmanQAgent(QLearningAgent):
@@ -186,8 +190,8 @@ class ApproximateQAgent(PacmanQAgent):
     DESCRIPTION: <Write something here so we know what you did.>
     """
 
-    def __init__(self, index, 
-        extractor = 'pacai.core.featureExtractors.IdentityExtractor', **kwargs):
+    def __init__(self, index,
+            extractor = 'pacai.core.featureExtractors.IdentityExtractor', **kwargs):
         super().__init__(index, **kwargs)
         self.featExtractor = reflection.qualifiedImport(extractor)
 
@@ -237,5 +241,5 @@ class ApproximateQAgent(PacmanQAgent):
         for feature in features.keys():
             if feature not in self.weights.keys():
                 self.weights[feature] = 0
-            self.weights[feature] += a * (reward + d * self.getValue(nextState) \
+            self.weights[feature] += a * (reward + d * self.getValue(nextState)
             - self.getQValue(state, action)) * features[feature]

@@ -1,5 +1,4 @@
 from pacai.agents.learning.value import ValueEstimationAgent
-from pacai.core import mdp
 import copy
 
 class ValueIterationAgent(ValueEstimationAgent):
@@ -51,7 +50,6 @@ class ValueIterationAgent(ValueEstimationAgent):
                 temp[state] = self.getQValue(state, action)
             self.values = temp
 
-
     def getValue(self, state):
         """
         Return the value of the state (computed in __init__).
@@ -74,7 +72,7 @@ class ValueIterationAgent(ValueEstimationAgent):
         maxq = 0
         for nextState, prob in self.mdp.getTransitionStatesAndProbs(state, action):
             transitionReward = self.mdp.getReward(state, action, nextState)
-            qval = prob * (transitionReward + self.discountRate `* self.getValue(nextState))        
+            qval = prob * (transitionReward + self.discountRate * self.getValue(nextState))
             maxq += qval
         return maxq
 
@@ -95,10 +93,9 @@ class ValueIterationAgent(ValueEstimationAgent):
             if i == 0:
                 maxQ = q
                 bestAction = action
-                continue   
+                continue
             if q > maxQ:
                 maxQ = q
                 bestAction = action
         
         return bestAction
-
