@@ -81,13 +81,16 @@ def question6():
     Don't know if (1, 0.8) is right, but the logic is that high epsilon -> it'll try out all the routes, 
     even if they aren't optimal; this helps reinforce the agent's knowledge that the cliff is bad.
     and.. there was no logic behind the learning rate
+
+    update: idt its possible
     
     """
 
     answerEpsilon = 1.0 # 0.3
     answerLearningRate = 0.8 # 0.5
 
-    return answerEpsilon, answerLearningRate
+    return NOT_POSSIBLE
+    #return answerEpsilon, answerLearningRate
 
 if __name__ == '__main__':
     questions = [

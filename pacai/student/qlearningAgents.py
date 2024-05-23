@@ -137,7 +137,8 @@ class QLearningAgent(ReinforcementAgent):
         d = self.getDiscountRate()
 
         # a(new) + (1-a)(old)
-        self.values[(state, action)] = (a * (reward + d * self.getValue(nextState))) + ((1 - a) * self.getQValue(state, action))
+        self.values[(state, action)] = (a * (reward + d * self.getValue(nextState))) +\
+        ((1 - a) * self.getQValue(state, action))
 
 
 class PacmanQAgent(QLearningAgent):
@@ -220,13 +221,10 @@ class ApproximateQAgent(PacmanQAgent):
         if weights are empty, it should be 1
         """
         dotProd = 0
-        #print(self.featExtractor)
-        #print("state", state)
         features = self.featExtractor.getFeatures(state, state, action)
         for feature in features.keys():
             dotProd += features[feature] * self.weights.get(feature, 1.0)
         return dotProd
-
 
     def update(self, state, action, nextState, reward):
         """
@@ -236,10 +234,8 @@ class ApproximateQAgent(PacmanQAgent):
         print("update: features", features)
         a = self.getAlpha()
         d = self.getDiscountRate()
-        # i'm just doing random stuff
         for feature in features.keys():
             if feature not in self.weights.keys():
                 self.weights[feature] = 0
-            self.weights[feature] += a * (reward + d * self.getValue(nextState) - self.getQValue(state, action)) * features[feature]
-
-
+            self.weights[feature] += a * (reward + d * self.getValue(nextState) \
+            - self.getQValue(state, action)) * features[feature]

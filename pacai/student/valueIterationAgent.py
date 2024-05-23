@@ -46,7 +46,7 @@ class ValueIterationAgent(ValueEstimationAgent):
             temp = copy.deepcopy(self.values)
             for state in self.mdp.getStates():
                 action = self.getAction(state)
-                if self.mdp.isTerminal(state):# or action == 'exit':
+                if self.mdp.isTerminal(state):
                     continue
                 temp[state] = self.getQValue(state, action)
             self.values = temp
@@ -74,9 +74,8 @@ class ValueIterationAgent(ValueEstimationAgent):
         maxq = 0
         for nextState, prob in self.mdp.getTransitionStatesAndProbs(state, action):
             transitionReward = self.mdp.getReward(state, action, nextState)
-            qval = prob * (transitionReward + self.discountRate*self.getValue(nextState))        
+            qval = prob * (transitionReward + self.discountRate `* self.getValue(nextState))        
             maxq += qval
-        #self.values[state] = maxq
         return maxq
 
     def getPolicy(self, state):
@@ -96,7 +95,7 @@ class ValueIterationAgent(ValueEstimationAgent):
             if i == 0:
                 maxQ = q
                 bestAction = action
-                continue      
+                continue   
             if q > maxQ:
                 maxQ = q
                 bestAction = action
